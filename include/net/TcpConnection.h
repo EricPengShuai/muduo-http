@@ -38,6 +38,9 @@ class TcpConnection : noncopyable, public std::enable_shared_from_this<TcpConnec
 
     void shutdown();  // 关闭连接
 
+    void forceClose();  // 强制关闭连接
+    void forceCloseWithDelay(double seconds);
+
     void setConnectionCallback(const ConnectionCallback &cb) { connectionCallback_ = cb; }
 
     void setMessageCallback(const MessageCallback &cb) { messageCallback_ = cb; }
@@ -63,9 +66,10 @@ class TcpConnection : noncopyable, public std::enable_shared_from_this<TcpConnec
     void handleError();
 
     void setState(StateE s) { state_ = s; }
-
-    void sendInLoop(const void *message, size_t len);
-    void shutdownInLoop();
+    
+    void sendInLoop(const void *message, size_t len); // 被 send 调用
+    void shutdownInLoop();    // 被 shutdown 调用
+    void forceCloseInLoop();  // 被 forceClose 调用
 
     EventLoop *loop_;  // 这里绝对不是 baseLoop，因为 TcpConnection 都是在 subLoop 里面管理的
     const std::string name_;

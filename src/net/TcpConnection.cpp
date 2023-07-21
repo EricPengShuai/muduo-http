@@ -141,6 +141,39 @@ void TcpConnection::connectEstablished() {
     connectionCallback_(shared_from_this());
 }
 
+void TcpConnection::forceClose()
+{
+    if (state_ == kConnected || state_ == kDisconnecting)
+    {
+        setState(kDisconnecting);
+        loop_->queueInLoop(std::bind(&TcpConnection::forceCloseInLoop, shared_from_this()));
+    }
+}
+
+// 推迟 second 秒强制退出，可以用于 TIME_WAIT round trip
+void TcpConnection::forceCloseWithDelay(double seconds)
+{
+    if (state_ == kConnected || state_ == kDisconnecting)
+    {
+        setState(kDisconnecting);
+        loop_->runAfter(
+            seconds,
+            // makeWeakCallback(shared_from_this(),
+            //                     &TcpConnection::forceClose)
+            std::bind(&TcpConnection::forceClose, shared_from_this())
+            );  //!TODO: not forceCloseInLoop to avoid race condition
+    }
+}
+
+void TcpConnection::forceCloseInLoop()
+{
+    if (state_ == kConnected || state_ == kDisconnecting)
+    {
+        // as if we received 0 byte in handleRead();
+        handleClose();
+    }
+}
+
 // 连接销毁，当 TcpServer 移除时连接时被调用
 void TcpConnection::connectDestroyed() {
     if (state_ == kConnected) {
