@@ -60,6 +60,19 @@ inline bool operator==(Timestamp lhs, Timestamp rhs)
     return lhs.microSecondsSinceEpoch() == rhs.microSecondsSinceEpoch();
 }
 
+/**Gets time difference of two timestamps, result in seconds.
+ * 
+ * @param high, low
+ * @return (high-low) in seconds
+ * @c double has 52-bit precision, enough for one-microsecond
+ * resolution for next 100 years.
+*/
+inline double timeDifference(Timestamp high, Timestamp low)
+{
+    int64_t diff = high.microSecondsSinceEpoch() - low.microSecondsSinceEpoch();
+    return static_cast<double>(diff) / Timestamp::kMicroSecondsPerSecond;
+}
+
 // 如果是重复定时任务就会对此时间戳进行增加。
 inline Timestamp addTime(Timestamp timestamp, double seconds)
 {
