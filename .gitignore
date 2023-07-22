@@ -1,7 +1,13 @@
+/.vscode
+
 /build
+
+/lib
+
+echoserver
 
 timerserver
 
-echoserver
+httpserver
 
 libmuduo-http.so
