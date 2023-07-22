@@ -54,7 +54,4 @@ add_subdirectory(example/echo_server)
 
 add_subdirectory(example/timer_server)
 
-# add_subdirectory(src/mysql/test)
-
-# 加载base
-# add_subdirectory(src/base/test)
+add_subdirectory(example/http_server)
