@@ -84,11 +84,11 @@ NameNode nodeMap_; // 哈希表管理 connName --> Node
 - 提供 appendToBuffer(Buffer* output) 填充 outputBuffer_
 
 **HttpServer**
-- 提供常规的 onConnection 以及 onMessage 作为 callback，其中需要维护计时器列表，类似与 [TimerSrever](#### 2.2 TimerServer)
+- 提供常规的 onConnection 以及 onMessage 作为 callback，其中需要维护计时器列表，类似与 [TimerSrever](#22-timerserver)
 - 提供 HttpServer::onRequest(const TcpConnectionPtr& conn, const HttpRequest& req) 方法 conn->send(buf)
   - 其中需要用户自定义 std::function<void (const HttpRequest&, HttpResponse*)> httpCallback_ 方法
   - 根据 response.closeConnection 是否 shutdown
-- 定时器模块 onTimer 处理到期连接，参考 [TimerSrever](#### 2.2 TimerServer)
+- 定时器模块 onTimer 处理到期连接，参考 [TimerSrever](#22-timerserver)
 
 **main**
 主要提供 void onRequest(const HttpRequest& req, HttpResponse* resp) 作为 HttpServer 的 callback，处理业务逻辑
