@@ -12,10 +12,10 @@
 using namespace std::placeholders;
 
 // RFC 862
-class EchoServer
+class TimerServer
 {
 public:
-    EchoServer(EventLoop *loop,
+    TimerServer(EventLoop *loop,
                const InetAddress &listenAddr,
                int idleSeconds);
 
@@ -48,24 +48,24 @@ private:
     NameNode nodeMap_;
 };
 
-EchoServer::EchoServer(EventLoop *loop,
+TimerServer::TimerServer(EventLoop *loop,
                        const InetAddress &listenAddr,
                        int idleSeconds)
-    : server_(loop, listenAddr, "EchoServer"),
+    : server_(loop, listenAddr, "TimerServer"),
       idleSeconds_(idleSeconds)
 {
     server_.setConnectionCallback(
-        std::bind(&EchoServer::onConnection, this, _1));
+        std::bind(&TimerServer::onConnection, this, _1));
     server_.setMessageCallback(
-        std::bind(&EchoServer::onMessage, this, _1, _2, _3));
+        std::bind(&TimerServer::onMessage, this, _1, _2, _3));
 
-    loop->runEvery(5.0, std::bind(&EchoServer::onTimer, this)); // 每过 5s 检查一下 conn 是否过期
+    loop->runEvery(5.0, std::bind(&TimerServer::onTimer, this)); // 每过 5s 检查一下 conn 是否过期
 }
 
-void EchoServer::onConnection(const TcpConnectionPtr &conn)
+void TimerServer::onConnection(const TcpConnectionPtr &conn)
 {
     std::string up_down = conn->connected() ? "UP" : "DOWN";
-    LOG_INFO("EchoServer - %s -> %s is %s", 
+    LOG_INFO("TimerServer - %s -> %s is %s", 
         conn->peerAddress().toIpPort().c_str(), conn->localAddress().toIpPort().c_str(), up_down.c_str());
 
     if (conn->connected())
@@ -85,7 +85,7 @@ void EchoServer::onConnection(const TcpConnectionPtr &conn)
     }
 }
 
-void EchoServer::onMessage(const TcpConnectionPtr &conn,
+void TimerServer::onMessage(const TcpConnectionPtr &conn,
                            Buffer *buf,
                            Timestamp time)
 {
@@ -102,7 +102,7 @@ void EchoServer::onMessage(const TcpConnectionPtr &conn,
     assert(node->position == -- connectionList_.end());
 }
 
-void EchoServer::onTimer()
+void TimerServer::onTimer()
 {
     Timestamp now = Timestamp::now();
     for (WeakConnectionList::iterator it = connectionList_.begin();
@@ -118,7 +118,7 @@ void EchoServer::onTimer()
                 if (conn->connected())
                 {
                     conn->shutdown();
-                    LOG_INFO("[EchoServer::onTimer()] shutting down %s", conn->name().c_str());
+                    LOG_INFO("[TimerServer::onTimer()] shutting down %s", conn->name().c_str());
                     conn->forceCloseWithDelay(3.5); //!NOTE > round trip of the whole Internet.
                 }
             }
@@ -154,7 +154,7 @@ int main(int argc, char *argv[])
         idleSeconds = atoi(argv[1]);
     }
     LOG_INFO("pid = %d, idle seconds = %d", getpid(), idleSeconds);
-    EchoServer server(&loop, listenAddr, idleSeconds);
+    TimerServer server(&loop, listenAddr, idleSeconds);
     server.start();
     loop.loop();
 }
