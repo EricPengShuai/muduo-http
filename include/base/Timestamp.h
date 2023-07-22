@@ -22,7 +22,7 @@ public:
     static Timestamp now();
 
     // 格式: "%4d/%02d/%02d %02d:%02d:%02d.%06d", 年/月/日 时分秒.微秒
-    std::string toString(bool showMicroseconds = false) const;
+    std::string toString(bool showMicroseconds = true) const;
 
     // 返回当前时间戳的微妙
     int64_t microSecondsSinceEpoch() const { return microSecondsSinceEpoch_; }

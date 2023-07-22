@@ -1,15 +1,22 @@
 #include "Timestamp.h"
 
 #include <time.h>
+#include <sys/time.h>
 
-Timestamp Timestamp::now() { return Timestamp(time(NULL)); }
+Timestamp Timestamp::now() { 
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    int64_t seconds = tv.tv_sec;
+    return Timestamp(seconds * kMicroSecondsPerSecond + tv.tv_usec);
+}
 
-std::string Timestamp::toString(bool showMicroseconds) const {
+std::string Timestamp::toString(bool showMicroseconds) const
+{
     char buf[64] = {0};
     time_t seconds = static_cast<time_t>(microSecondsSinceEpoch_ / kMicroSecondsPerSecond);
-    // 使用localtime函数将秒数格式化成日历时间
+    // 使用 localtime 函数将「秒数」格式化成日历时间
     tm *tm_time = localtime(&seconds);
-    if (showMicroseconds) // 2022/08/26 16:29:10.773804
+    if (showMicroseconds)
     {
         int microseconds = static_cast<int>(microSecondsSinceEpoch_ % kMicroSecondsPerSecond);
         snprintf(buf, sizeof(buf), "%4d/%02d/%02d %02d:%02d:%02d.%06d",
@@ -21,7 +28,7 @@ std::string Timestamp::toString(bool showMicroseconds) const {
                 tm_time->tm_sec,
                 microseconds);
     }
-    else // 2022/08/26 16:29:10
+    else
     {
         snprintf(buf, sizeof(buf), "%4d/%02d/%02d %02d:%02d:%02d",
                 tm_time->tm_year + 1900,
