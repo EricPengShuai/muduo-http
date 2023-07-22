@@ -133,12 +133,9 @@ void TimerServer::onTimer()
             }
             ++it;
         }
-        else // weak_ptr 提升失败
+        else // weak_ptr 提升失败，已经被移除？
         {
             LOG_WARN("Expired");
-            // if (nodeMap_.count(it->name())) {
-            //     nodeMap_.erase(it->name());
-            // }
             it = connectionList_.erase(it);
         }
     }

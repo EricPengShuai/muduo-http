@@ -187,5 +187,3 @@ bool TimerQueue::insert(Timer* timer)
 
     return earliestChanged;
 }
-
-
