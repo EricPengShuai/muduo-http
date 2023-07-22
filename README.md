@@ -1,5 +1,5 @@
 ## MUDUO-HTTP
-> 基于 mymuduo 再次重构，添加 HTTPServer 例子
+> 基于 [mymuduo](https://gitee.com/ericps/muduo) 再次重构，添加 TimerServer 以及 HTTPServer 例子，计时器模块的处理
 
 ### 1 改动点
 
@@ -14,6 +14,11 @@
 - 通过 timerfd_create 创建 timerfd，通过 Channel 注册到 Poller 上并 enableReading
 - 只提供一个 public 接口 addTimer(TimerCallback cb, Timestamp when, double interval)
 - resetTimerfd 通过 timerfd_settime 重置 timer 的到期时间
+
+**定时器模块特点**
+- 整个 TimerQueue 只使用一个 timerfd 来观察定时事件，并且每次重置 timerfd 时只需跟 set 中第一个节点比较即可，因为 set 本身是一个有序队列
+- 整个定时器队列采用了 muduo 典型的事件分发机制，可以使的定时器的到期时间像 fd 一样在 Loop 线程中处理
+- 之前 Timestamp 用于比较大小的重载方法在这里得到了很好的应用
 
 #### 1.3 EventLoop
 - 新增 std::unique_ptr<TimerQueue> timerQueue_
