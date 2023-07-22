@@ -7,6 +7,7 @@
 // 定义日志级别
 enum LogLevel {
     INFO,   // 普通信息
+    WARN,   // 警告
     ERROR,  // 错误信息
     FATAL,  // core 信息
     DEBUG,  // 调试信息
@@ -27,6 +28,15 @@ class Logger : noncopyable {
 };
 
 #define LOG_INFO(logmsgFormat, ...)                                                                                    \
+    do {                                                                                                               \
+        Logger &logger = Logger::instance();                                                                           \
+        logger.setLogLevel(INFO);                                                                                      \
+        char buf[1024];                                                                                                \
+        snprintf(buf, 1024, logmsgFormat, ##__VA_ARGS__);                                                              \
+        logger.log(buf);\
+    } while (0)
+    
+#define LOG_WARN(logmsgFormat, ...)                                                                                    \
     do {                                                                                                               \
         Logger &logger = Logger::instance();                                                                           \
         logger.setLogLevel(INFO);                                                                                      \

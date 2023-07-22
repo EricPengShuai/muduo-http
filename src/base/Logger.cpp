@@ -17,6 +17,9 @@ void Logger::log(std::string msg) {
         case INFO:
             pre = "[INFO] ";
             break;
+        case WARN:
+            pre = "[WARN] ";
+            break;
         case ERROR:
             pre = "[ERROR] ";
             break;
