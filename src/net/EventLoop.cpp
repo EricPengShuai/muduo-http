@@ -45,7 +45,11 @@ EventLoop::EventLoop()
     wakeupChannel_->setReadCallback(std::bind(&EventLoop::handleRead, this));
 
     // 每一个 eventloop 都将监听 wakeupchannel 的 EPOLLIN 读事件了
+#ifdef CHANNELTYPE
+    wakeupChannel_->enableReading("wakeupChannel");
+#else
     wakeupChannel_->enableReading();
+#endif
 }
 
 EventLoop::~EventLoop() {
@@ -140,6 +144,9 @@ void EventLoop::wakeup() {
 
 // 调用 poller->updateChannel
 void EventLoop::updateChannel(Channel *channel) { poller_->updateChannel(channel); }
+
+// DEBUG 使用，打印具体的 updateChannel 信息
+void EventLoop::updateChannel(Channel *channel, const std::string &type) { poller_->updateChannel(channel, type); }
 
 // 调用 poller->removeChannel
 void EventLoop::removeChannel(Channel *channel) { poller_->removeChannel(channel); }

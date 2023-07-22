@@ -20,6 +20,7 @@ class Poller : noncopyable {
     // 给所有的 IO 复用保留统一的接口
     virtual Timestamp poll(int timeoutMs, ChannelList *activeChannels) = 0;
     virtual void updateChannel(Channel *channel) = 0;
+    virtual void updateChannel(Channel *channel, const std::string &type) = 0;
     virtual void removeChannel(Channel *channel) = 0;
 
     // 判断参数 channel 是否在当前的 Poller 当中

@@ -42,6 +42,11 @@ class Channel : noncopyable {
         events_ |= kReadEvent;
         update();
     }
+    void enableReading(const std::string &type) {  // DEBUG 使用查看具体 channel 信息
+        events_ |= kReadEvent;
+        update(type);
+    }
+
     // 消除 channel.fd 读事件
     void disableReading() {
         events_ &= ~kReadEvent;
@@ -78,6 +83,8 @@ class Channel : noncopyable {
 
   private:
     void update();
+    void update(const std::string &type); // DEBUG 使用，打印 update 的具体类型
+
     void handleEventWithGuard(Timestamp receiveTime);
 
   private:

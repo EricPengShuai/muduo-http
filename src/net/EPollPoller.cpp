@@ -93,6 +93,31 @@ void EPollPoller::updateChannel(Channel *channel) {
     }
 }
 
+// DEBUG 使用，查看具体的 Channel 信息
+void EPollPoller::updateChannel(Channel *channel, const std::string &type) {
+    const int index = channel->index();
+    LOG_INFO("EPollPoller::updateChannel - fd = %d, events = %d, index = %d for %s", channel->fd(), channel->events(), index, type.c_str());
+
+    // 理解 kNew, kAdded, kDeleted 之间的逻辑
+    if (index == kNew || index == kDeleted) {
+        if (index == kNew) {
+            int fd = channel->fd();
+            channels_[fd] = channel;
+        }
+
+        channel->set_index(kAdded);
+        update(EPOLL_CTL_ADD, channel);
+    } else {  // channel 已经在 poller 上注册过了
+        int fd = channel->fd();
+        if (channel->isNoneEvent()) {  // 注册过但是不关心了需要删除
+            update(EPOLL_CTL_DEL, channel);
+            channel->set_index(kDeleted);
+        } else {  // 已经注册并需要修改的情况
+            update(EPOLL_CTL_MOD, channel);
+        }
+    }
+}
+
 // 从 Poller 中删除 channel
 void EPollPoller::removeChannel(Channel *channel) {
     int fd = channel->fd();

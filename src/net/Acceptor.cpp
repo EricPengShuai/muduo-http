@@ -39,7 +39,11 @@ Acceptor::~Acceptor() {
 void Acceptor::listen() {
     listening_ = true;
     acceptSocket_.listen();         // listen
+#ifdef CHANNELTYPE
+    acceptChannel_.enableReading("acceptChannel"); // acceptChannel_ => Poller
+#else
     acceptChannel_.enableReading(); // acceptChannel_ => Poller
+#endif
 }
 
 // listenfd 有事件发生了，就是有新用户连接了

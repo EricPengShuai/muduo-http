@@ -34,6 +34,7 @@ class EventLoop : noncopyable {
 
     // EventLoop 调用 Poller 方法，实际上是 channel 想要调用
     void updateChannel(Channel *channel);
+    void updateChannel(Channel *channel, const std::string &type); // DEBUG 使用，查看 Channel 具体信息
     void removeChannel(Channel *channel);
     void hasChannel(Channel *channel);
 

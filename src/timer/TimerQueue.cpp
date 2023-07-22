@@ -34,7 +34,11 @@ TimerQueue::TimerQueue(EventLoop* loop)
 {
     timerfdChannel_.setReadCallback(
         std::bind(&TimerQueue::handleRead, this));
+#ifdef CHANNELTYPE
+    timerfdChannel_.enableReading("timerfdChannel");
+#else
     timerfdChannel_.enableReading();
+#endif
 }
 
 TimerQueue::~TimerQueue()

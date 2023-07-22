@@ -39,6 +39,12 @@ void Channel::update() {
     loop_->updateChannel(this);
 }
 
+// DEBUG 使用，查看 channel 具体类型信息
+void Channel::update(const std::string &type) {
+    // 通过 channel 所属的 EventLoop，调用 poller 的相应方法，注册 fd 的 events 事件
+    loop_->updateChannel(this, type);
+}
+
 // 在 channel 所属的 EventLoop 中把当前的 channel 删除掉
 void Channel::remove() { loop_->removeChannel(this); }
 

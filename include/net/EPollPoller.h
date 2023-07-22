@@ -18,6 +18,7 @@ class EPollPoller : public Poller {
     // 重写基类 Poller 的抽象方法
     Timestamp poll(int timeoutMs, ChannelList *activeChannels) override;
     void updateChannel(Channel *channel) override;
+    void updateChannel(Channel *channel, const std::string &buf) override; // DEBUG 使用
     void removeChannel(Channel *channel) override;
 
   private:
