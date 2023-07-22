@@ -26,10 +26,22 @@ class Buffer {
 
     ~Buffer();
 
+    /**
+     * kCheapPrepend | reader | writer |
+     * writerIndex_ - readerIndex_
+     */
     size_t readableBytes() const { return writerIndex_ - readerIndex_; }
 
+    /**
+     * kCheapPrepend | reader | writer |
+     * buffer_.size() - writerIndex_
+     */
     size_t writableBytes() const { return buffer_.size() - writerIndex_; }
 
+    /**
+     * kCheapPrepend | reader | writer |
+     * readerIndex_
+     */
     size_t prependableBytes() const {  // 前面空闲的缓冲区
         return readerIndex_;
     }
@@ -37,7 +49,12 @@ class Buffer {
     // 返回缓冲区中可读数据的起始地址
     const char *peek() const { return begin() + readerIndex_; }
 
-    //!NOTE: 相当于更新 readerIndex | writerIndex, onMessage string <-- Buffer
+    void retrieveUntil(const char *end)
+    {
+        retrieve(end - peek());
+    }
+
+    //!NOTE: 相当于更新 readerIndex/writerIndex, onMessage string <-- Buffer
     void retrieve(size_t len) {
         if (len < readableBytes()) {
             readerIndex_ += len;  // 读取一部分
@@ -46,9 +63,18 @@ class Buffer {
         }
     }
 
+    // 全部读完，则直接将可读缓冲区指针移动到写缓冲区指针那
     void retrieveAll() {
         readerIndex_ = kCheapPrepend;
         writerIndex_ = kCheapPrepend;
+    }
+
+    // DEBUG使用，提取出 string 类型，但是不会置位
+    std::string GetBufferAllAsString()
+    {
+        size_t len = readableBytes();
+        std::string result(peek(), len);
+        return result;
     }
 
     // 将 onMessage 函数上报的 Buffer 数据转换成 string 类型的数据返回
@@ -68,11 +94,25 @@ class Buffer {
         }
     }
 
+    // string::data() 转换成字符数组，但是没有 '\0'
+    void append(const std::string &str)
+    {
+        append(str.data(), str.size());
+    }
+
     // 把 data 写入 writerIndex 开始的地址
     void append(const char *data, size_t len) {
         ensureWritableBytes(len);
         std::copy(data, data + len, beginWrite());
         writerIndex_ += len;  // 更新 writeIndex
+    }
+
+    // 在 buffer 找到 "\r\n" 的位置并返回，如果没有就返回 NULL
+    const char* findCRLF() const
+    {
+        // FIXME: replace with memmem()?
+        const char* crlf = std::search(peek(), beginWrite(), kCRLF, kCRLF+2);
+        return crlf == beginWrite() ? NULL : crlf;
     }
 
     char *beginWrite() { return begin() + writerIndex_; }
@@ -94,9 +134,9 @@ class Buffer {
          *  kCheapPrepend | reader | writer |
          *  kCheapPrepend   |        len       |
          */
-        if (writableBytes() + prependableBytes() < len + kCheapPrepend) {
+        if (writableBytes() + prependableBytes() < len + kCheapPrepend) { // 整个 buffer 不够用
             buffer_.resize(writerIndex_ + len);
-        } else {
+        } else { // 整个 buffer 够用，将后面移动到前面继续分配
             size_t readable = readableBytes();
             // 把已读的部分挪至前面
             std::copy(begin() + readerIndex_, begin() + writerIndex_, begin() + kCheapPrepend);
@@ -111,4 +151,6 @@ class Buffer {
     std::vector<char> buffer_;
     size_t readerIndex_;
     size_t writerIndex_;
+
+    static const char kCRLF[]; // "\r\n"
 };

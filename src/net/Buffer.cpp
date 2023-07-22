@@ -4,6 +4,8 @@
 #include <sys/uio.h>
 #include <unistd.h>
 
+const char Buffer::kCRLF[] = "\r\n";
+
 /**
  * !NOTE: 从 fd 读数据，相当于读到 buffer 的写缓冲区
  * 从 fd 上读数据，Poller 工作在 LT 模式

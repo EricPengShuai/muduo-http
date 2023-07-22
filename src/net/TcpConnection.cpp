@@ -49,12 +49,28 @@ TcpConnection::~TcpConnection() {
 }
 
 // 发送数据
-void TcpConnection::send(std::string &buf) {
+void TcpConnection::send(const std::string &buf) {
     if (state_ == kConnected) {
         if (loop_->isInLoopThread()) {
             sendInLoop(buf.c_str(), buf.size());
         } else {
             loop_->runInLoop(std::bind(&TcpConnection::sendInLoop, this, buf.c_str(), buf.size()));
+        }
+    }
+}
+
+void TcpConnection::send(Buffer *buf) {
+    if (state_ == kConnected) {
+        if (loop_->isInLoopThread()) {
+            sendInLoop(buf->peek(), buf->readableBytes());
+            buf->retrieveAll(); // 将读缓冲区全部发送
+        } else {
+            loop_->runInLoop(std::bind(
+                &TcpConnection::sendInLoop, 
+                this, 
+                buf->retrieveAllAsString().c_str(), 
+                buf->retrieveAllAsString().size())
+            );
         }
     }
 }
@@ -135,7 +151,11 @@ void TcpConnection::connectEstablished() {
     setState(kConnected);
     //!NOTE: 防止上层将 TcpConnection 给 remove 掉而 callback 执行出错
     channel_->tie(shared_from_this());
+#ifdef CHANNELTYPE
+    channel_->enableReading("connChannel in " + name());  // 向 poller 注册 channel 的 epollin 事件
+#else
     channel_->enableReading();  // 向 poller 注册 channel 的 epollin 事件
+#endif
 
     // 新连接建立，执行回调
     connectionCallback_(shared_from_this());

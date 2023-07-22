@@ -34,7 +34,8 @@ class TcpConnection : noncopyable, public std::enable_shared_from_this<TcpConnec
 
     bool connected() const { return state_ == kConnected; }
 
-    void send(std::string &buf);  // 发送数据
+    void send(const std::string &buf);  // 发送数据
+    void send(Buffer *buf);  // 发送数据
 
     void shutdown();  // 关闭连接
 
