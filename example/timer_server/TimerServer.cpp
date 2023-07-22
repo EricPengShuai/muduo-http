@@ -4,8 +4,12 @@
 
 #include <list>
 #include <unordered_map>
-#include <stdio.h>
-#include <unistd.h>
+#include <string>
+#include <cassert>
+// #include <stdio.h>
+// #include <unistd.h>
+
+using namespace std::placeholders;
 
 // RFC 862
 class EchoServer
@@ -32,8 +36,7 @@ private:
     using WeakTcpConnectionPtr = std::weak_ptr<TcpConnection>;
     using WeakConnectionList = std::list<WeakTcpConnectionPtr>; // weak_ptr conn list
 
-    struct Node : public muduo::copyable
-    {
+    struct Node {
         Timestamp lastReceiveTime;
         WeakConnectionList::iterator position;
     };
@@ -56,7 +59,7 @@ EchoServer::EchoServer(EventLoop *loop,
     server_.setMessageCallback(
         std::bind(&EchoServer::onMessage, this, _1, _2, _3));
 
-    loop->runEvery(5.0, std::bind(&EchoServer::onTimer, this));
+    loop->runEvery(5.0, std::bind(&EchoServer::onTimer, this)); // 每过 5s 检查一下 conn 是否过期
 }
 
 void EchoServer::onConnection(const TcpConnectionPtr &conn)
@@ -70,14 +73,14 @@ void EchoServer::onConnection(const TcpConnectionPtr &conn)
         Node node;
         node.lastReceiveTime = Timestamp::now();
         connectionList_.push_back(conn); // 添加 conn 到 connectionList_
-        node.position = --connectionList_.end();
-        nodeMap_[conn.name()] = node;
+        node.position = -- connectionList_.end();
+        nodeMap_[conn->name()] = node;
     }
     else
     {
-        assert(nodeMap_.count(conn.name()));
-        const Node &node = nodeMap_[conn.name()];
-        nodeMap_.erase(conn.name());
+        assert(nodeMap_.count(conn->name()));
+        const Node &node = nodeMap_[conn->name()];
+        nodeMap_.erase(conn->name());
         connectionList_.erase(node.position); // 移除 conn
     }
 }
@@ -86,17 +89,17 @@ void EchoServer::onMessage(const TcpConnectionPtr &conn,
                            Buffer *buf,
                            Timestamp time)
 {
-    string msg(buf->retrieveAllAsString());
+    std::string msg(buf->retrieveAllAsString());
 
-    LOG_INFO("%s echo %ul bytes at %s", conn->name().c_str(), msg.size(), time.toString().c_str());
+    LOG_INFO("%s echo %lu bytes at %s", conn->name().c_str(), msg.size(), time.toString().c_str());
     conn->send(msg);
 
-    assert(nodeMap_.count(conn.name()));
-    Node *node = &nodeMap_[conn.name()];
+    assert(nodeMap_.count(conn->name()));
+    Node *node = &nodeMap_[conn->name()];
     node->lastReceiveTime = time;
 
     connectionList_.splice(connectionList_.end(), connectionList_, node->position); // 将当前 node 移到 list 末尾
-    assert(node->position == --connectionList_.end());
+    assert(node->position == -- connectionList_.end());
 }
 
 void EchoServer::onTimer()
@@ -108,14 +111,14 @@ void EchoServer::onTimer()
         TcpConnectionPtr conn = it->lock();
         if (conn)
         {
-            Node *n = &nodeMap_[conn.name()];
+            Node *n = &nodeMap_[conn->name()];
             double age = timeDifference(now, n->lastReceiveTime);
             if (age > idleSeconds_)
             {
                 if (conn->connected())
                 {
                     conn->shutdown();
-                    LOG_INFO("shutting down %s", conn->name().c_str());
+                    LOG_INFO("[EchoServer::onTimer()] shutting down %s", conn->name().c_str());
                     conn->forceCloseWithDelay(3.5); //!NOTE > round trip of the whole Internet.
                 }
             }
@@ -130,12 +133,12 @@ void EchoServer::onTimer()
             }
             ++it;
         }
-        else
+        else // weak_ptr 提升失败
         {
             LOG_WARN("Expired");
-            if (nodeMap_.count(it->name())) {
-                nodeMap_.erase(it->name());
-            }
+            // if (nodeMap_.count(it->name())) {
+            //     nodeMap_.erase(it->name());
+            // }
             it = connectionList_.erase(it);
         }
     }

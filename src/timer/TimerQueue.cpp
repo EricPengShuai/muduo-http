@@ -112,9 +112,10 @@ std::vector<TimerQueue::Entry> TimerQueue::getExpired(Timestamp now)
 {
     std::vector<Entry> expired;
 
-    //!TODO: back_inserter()
     Entry sentry(now, reinterpret_cast<Timer*>(UINTPTR_MAX));
     TimerList::iterator end = timers_.lower_bound(sentry);
+    
+    //!TODO: back_inserter()
     std::copy(timers_.begin(), end, back_inserter(expired));
     timers_.erase(timers_.begin(), end);
     
