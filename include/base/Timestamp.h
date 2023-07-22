@@ -1,5 +1,4 @@
-#ifndef TIME_STAMP_H
-#define TIME_STAMP_H
+#pragma once
 
 #include <iostream>
 #include <string>
@@ -81,5 +80,3 @@ inline Timestamp addTime(Timestamp timestamp, double seconds)
     // 返回新增时后的时间戳
     return Timestamp(timestamp.microSecondsSinceEpoch() + delta);
 }
-
-#endif // TIME_STAMP_H

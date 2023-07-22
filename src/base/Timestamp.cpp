@@ -1,7 +1,6 @@
 #include "Timestamp.h"
 
 #include <time.h>
-#include <sys/time.h>
 
 Timestamp Timestamp::now() { 
     struct timeval tv;
